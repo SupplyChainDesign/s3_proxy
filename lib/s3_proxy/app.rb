@@ -3,8 +3,9 @@ require 'stringio'
 
 module S3Proxy
   class App
-    def initialize(options={})
+    def initialize(options={},service_opts={})
       @options = options
+      @service_opts = service_opts
     end
 
     def call(env)
@@ -12,7 +13,10 @@ module S3Proxy
       return Errors.not_found if env['PATH_INFO'].empty?
 
       # When used as a forward proxy
-      if env['HTTP_HOST'] =~ /(.+)\.s3\.amazonaws\.com/
+      if @service_opts[:bucket]
+        bucket = @service_opts[:bucket]
+        _, key = env['PATH_INFO'].split('/', 3)
+      elsif env['HTTP_HOST'] =~ /(.+)\.s3\.amazonaws\.com/
         bucket = $1
         _, key = env['PATH_INFO'].split('/', 2)
       else
